@@ -1,7 +1,15 @@
 {% extends "base.html" %}
-{% block title %}
+{% block title %}{% endblock %}
 {% block content %}
 	{% for repo in repos %}
-		repo.name <br />
+		{# if 1=1 #}
+		{{ repo.name }} <br />
+		
+		repo
+		1
+		{# else #}
+		 	
+		{# endif #}
+		
 	{% endfor %}
-{% block content %}
+{% endblock %}
