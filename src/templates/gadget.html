@@ -1,5 +1,7 @@
 <html>
    <head>
+   	  {{google_scripts}}
+   	  <script type="text/javascript" src="js/jquery-1.4.4.min.js"></script>	
       <script type="text/javascript">
       // Get user preferences
       var prefs = new _IG_Prefs();
@@ -17,11 +19,28 @@
          alert("Count reset to " + prefs.getInt("counter") + ".");
       }
       </script>
+      
 
    </head>
    <body>
       <h1>Header</h1>
    	  <a href="{{ url }}">Github</a>
+   	  
+   	  <form method="post" action="dologin.html">
+   	  <input type="text" id="login" name="login" />
+   	  <input type="text" id="pass" name="pass" />
+   	  <input type="submit" />
+   	  </form>
+   	  
+   	  
+   	  Watched repos <br />
+   	  My followers <br />
+   	  My followings <br />
+   	  Activity feed <br />
+   	  My repos <br />
+   	  Search <br />
+   	  My profile
+   	  
       <input type=button value="Count" name="count" onClick="incrementCounter()">
       <input type=button value="Reset" name="reset" onClick="resetCounter()"> 
    </body>
