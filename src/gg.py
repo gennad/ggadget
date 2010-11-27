@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+
+
 import os
 from google.appengine.ext.webapp import template
 from google.appengine.api import users
@@ -103,9 +106,49 @@ class GithubAPI:
         pushed_at = repos['pushed_at']
         """    
                 
+    def get_my_repos(self, login):
+        url = "http://github.com/api/v2/yaml/repos/show/%s" % login
+        repos = None
+        try:
+            response = urllib2.urlopen(url)
+            content = response.read()
+            dict = yaml.load(content)
+            repos = dict.get('repositories')
+        except urllib2.URLError, e:
+            pass
+        except Exception, e1:
+            pass
+        return repos
+    
+    def get_my_profile(self, login):
+        url = "http://github.com/api/v2/yaml/user/show/%s" % login
+        dict = None
+        try:
+            response = urllib2.urlopen(url)
+            content = response.read()
+            dict = yaml.load(content)
+        except urllib2.URLError, e:
+            pass
+        except Exception, e1:
+            pass
+        return dict
+    
+    def get_my_followers_followings(self, login):
+        followings_url = "http://github.com/api/v2/yaml/user/show/%s/followers" % login
+        followers_url = "http://github.com/api/v2/yaml/user/show/%s/followers" % login
+        try:
+            response = urllib2.urlopen(followers_url)
+            content = response.read()
+            followers_dict = yaml.load(content)
             
-       
-
+            response = urllib2.urlopen(followings_url)
+            content = response.read()
+            followings_dict = yaml.load(content)
+        except urllib2.URLError, e:
+            pass
+        except Exception, e1:
+            pass
+        return followers_dict, followings_dict
 
 class DoLogin(webapp.RequestHandler):
     #static variable
