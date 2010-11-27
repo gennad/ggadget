@@ -12,6 +12,9 @@ handlers:
   
 - url: /gg\.html
   script: gg.py
+  
+- url: /dologin\.html
+  script: gg.py
 
 - url: /.*
   script: githubgadget.py
