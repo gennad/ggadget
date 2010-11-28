@@ -15,6 +15,10 @@ import re
 import base64
 from urlparse import urlparse
 import yaml
+from xml.dom import minidom
+from google.appengine.api import memcache
+from google.appengine.ext import db
+import datetime
 
 class GGClass(webapp.RequestHandler):
     def get(self):
@@ -149,15 +153,77 @@ class GithubAPI:
         except Exception, e1:
             pass
         return followers_dict, followings_dict
+    
+    def get_user_feed(self, login):
+        
+        key = "xml_doc_%s" % login
+        all_feeds = []
+        xmldoc = memcache.get(key)
+        if xmldoc is None:
+            #try to retrieve from datastore
+            #ten_minutes = 
+            contents = db.GqlQuery("SELECT * FROM UserFeed LIMIT 1")
+            try:
+                content = contents[0]
+            except:
+                content = None
+            if content is not None:
+                #add to cache
+                xmldoc = minidom.parseString(content)
+                memcache.add(key, xmldoc, 600)
+            else: 
+                #retrieve from url and add to cache and datastore
+                url = 'https://github.com/%s.atom' % login
+                response = urllib2.urlopen(url)
+                content = response.read()
+                xmldoc = minidom.parseString(content)
+                memcache.add(key, xmldoc, 600)
+                dbContent = UserFeed(
+                                     login=login,
+                                     feedcontent=content,
+                                     )
+                dbContent.date = datetime.datetime.now()
+                dbContent.put()
+                
+        child_nodes = xmldoc.childNodes
+        if child_nodes.length > 0:
+            feed_elmt = child_nodes.item(0)
+            childs_of_feed = feed_elmt.childNodes
+            for one_child in childs_of_feed:
+                name = one_child.nodeName
+                if name == "entry":
+                    fe = FeedEntry()
+                    entry_childs = one_child.childNodes
+                    for entry_child in entry_childs:
+                        if entry_child.nodeName == 'id':
+                            id = entry_child.nodeValue
+                            fe.id = entry_child.firstChild.nodeValue 
+                            aaa = fe.id
+                            t = ""
+                        elif entry_child.nodeName == 'title':
+                            title = entry_child.firstChild.data
+                            fe.title = title
+                        elif entry_child.nodeName == 'content':
+                            content = entry_child.firstChild.data
+                            fe.content = content
+                        elif entry_child.nodeName == 'author':
+                            author_childs = entry_child.childNodes
+                            for author_child in author_childs:
+                                if author_child == 'name':
+                                    a_name = author_child.firstChild.nodeValue
+                                    fe.a_name = a_name
+                                elif author_child == 'uri':
+                                    a_uri = author_child.firstChild.nodeValue
+                                    fe.a_uri = a_uri
+                    all_feeds.append(fe)
+        return all_feeds
 
 class DoLogin(webapp.RequestHandler):
     #static variable
     url = 'http://github.com/api/v2/json'
     #private variables
     __login = None
-    
     __password = None
-    
     
     def generate_show_user_link(self, login):
         str = self.url+'/user/show/'+login
@@ -195,7 +261,7 @@ class DoLogin(webapp.RequestHandler):
             repos = [a, b]
             """
             if repos != None:
-                
+
                 """
                 for repo in repos:
                     name = repo[':name']
@@ -236,7 +302,6 @@ class DoLogin(webapp.RequestHandler):
         authline = e.headers['www-authenticate']
         # this gets the www-authenticate line from the headers
         # which has the authentication scheme and realm in it
-
 
         authobj = re.compile(
             r'''(?:\s*www-authenticate\s*:)?\s*(\w*)\s+realm=['"]([^'"]+)['"]''',
@@ -307,4 +372,62 @@ def main():
     
 if __name__ == "__main__":
     main()
+    
+class UserFeed(db.Model):
+    login = db.StringProperty(required=True)
+    #feedcontent = db.StringProperty(multiline=True)
+    feedcontent = db.TextProperty()
+    date = db.DateTimeProperty(auto_now_add=True)
+
+
+class FeedEntry():
+    
+    """
+    def getid(self):
+        return id
+    def setid(self, id):
+        self.id = id
+    def getpublished(self):
+        return self.published
+    def setpublished(self, published):
+        self.published = published
+    def getupdated(self):
+        return self.updated
+    def setupdated(self, updated):
+        self.updated = updated
+    def getlink(self):
+        return self.link
+    def setlink(self, link):
+        self.link = link
+    def gettitle(self):
+        return self.title
+    def settitle(self, title):
+        self.title = title
+    def geta_name(self):
+        return self.a_name
+    def seta_name(self, a_name):
+        self.a_name = a_name
+    def geta_uri(self):
+        return self.a_uri
+    def seta_uri(self, a_uri):
+        self.a_uri = a_uri
+    def getavatar_url(self):
+        return self.avatar_url
+    def setavatar_url(self, avatar_url):
+        self.avatar_url = avatar_url
+    def getcontent(self):
+        return self.content
+    def setcontent(self, content):
+        self.content = content   
+     
+    id = property(getid, setid)
+    published = property(getpublished, setpublished)
+    updated = property(getupdated, setupdated)
+    link = property(getlink, setlink)
+    title = property(gettitle, settitle)
+    a_name = property(geta_name, seta_name)
+    a_uri = property(geta_uri, seta_uri)
+    avatar_url = property(getavatar_url, setavatar_url)
+    content = property(getcontent, setcontent)
+    """
     
