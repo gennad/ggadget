@@ -39,10 +39,12 @@ class GGClass(webapp.RequestHandler):
         
         #now output all google scripts
         self.response.headers['Content-Type'] = 'text/html'
+        
+        """
         for script in google_scripts:
             #self.response.out.write(script)
             pass
-            
+        """    
             
         template_values = {
           'google_scripts': ''.join(google_scripts),
@@ -124,21 +126,41 @@ class GithubAPI:
             pass
         return repos
     
-    def get_my_profile(self, login):
+    def get_user_profile(self, login):
+        """
+        Returns user data
+        """
         url = "http://github.com/api/v2/yaml/user/show/%s" % login
         dict = None
         try:
             response = urllib2.urlopen(url)
             content = response.read()
             dict = yaml.load(content)
+            user_dict = dict['user']
+            #assign properties to user
+            u = User()
+            u.name = user_dict['name']
+            u.following_count = user_dict['following_count']
+            u.public_repo_count = user_dict['public_repo_count']
+            u.email = user_dict['email']
+            u.blog = user_dict['blog']
+            u.company = user_dict['company']
+            u.followers_count = user_dict['followers_count']
+            u.location = user_dict['location']
+            u.public_gist_count = user_dict['public_gist_count']
+            u.login = user_dict['login']
+            u.id = user_dict['id'] 
+            return u
         except urllib2.URLError, e:
             pass
         except Exception, e1:
             pass
-        return dict
     
     def get_my_followers_followings(self, login):
-        followings_url = "http://github.com/api/v2/yaml/user/show/%s/followers" % login
+        """
+        Returns dictionary with following and followers logins
+        """
+        followings_url = "http://github.com/api/v2/yaml/user/show/%s/following" % login
         followers_url = "http://github.com/api/v2/yaml/user/show/%s/followers" % login
         try:
             response = urllib2.urlopen(followers_url)
@@ -155,7 +177,10 @@ class GithubAPI:
         return followers_dict, followings_dict
     
     def get_user_feed(self, login):
-        
+        """
+        Gets user's feed
+        i.e. his public actions
+        """
         key = "xml_doc_%s" % login
         all_feeds = []
         xmldoc = memcache.get(key)
@@ -217,6 +242,8 @@ class GithubAPI:
                                     fe.a_uri = a_uri
                     all_feeds.append(fe)
         return all_feeds
+    
+     
 
 class DoLogin(webapp.RequestHandler):
     #static variable
@@ -380,7 +407,50 @@ class UserFeed(db.Model):
     date = db.DateTimeProperty(auto_now_add=True)
 
 
-class FeedEntry():
+class FeedEntry:
+    def getid(self):
+        return id
+    def getpublished(self):
+        return self.published
+    def getupdated(self):
+        return self.updated
+    def getlink(self):
+        return self.link
+    def gettitle(self):
+        return self.title
+    def geta_name(self):
+        return self.a_name
+    def geta_uri(self):
+        return self.a_uri
+    def getavatar_url(self):
+        return self.avatar_url
+    def getcontent(self):
+        return self.content
+    
+
+class User:
+    def get_id(self):
+        return self.id;
+    def get_login(self):
+        return self.login;
+    def get_name(self):
+        return self.name;
+    def get_company(self):
+        return self.company;
+    def get_location(self):
+        return self.location;
+    def get_email(self):
+        return self.email;
+    def get_blog(self):
+        return self.blog;
+    def get_following_count(self):
+        return self.following_count;
+    def get_followers_count(self):
+        return self.followers_count;
+    def get_public_gist_count(self):
+        return self.public_gist_count;
+    def get_public_repo_count(self):
+        return self.public_repo_count;
     
     """
     def getid(self):
