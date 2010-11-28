@@ -17,13 +17,24 @@ import sys
 import string
 import time
 
-def GetAuthSubUrl():
-    next = 'http://www.coolcalendarsite.com/welcome.pyc'
+
+
+def getAuthSubUrl():
+    callback = 'http://localhost/welcome.pyc' #callback
     scope = 'https://www.google.com/calendar/feeds/'
     secure = False
     session = True
     calendar_service = gdata.calendar.service.CalendarService()
-    return calendar_service.GenerateAuthSubURL(next, scope, secure, session);
+    return calendar_service.GenerateAuthSubURL(callback, scope, secure, session);
+
+def parseSessionToken(string):
+    try:
+        needle = "token="
+        pos=string.index(needle)
+        return string[pos+len(needle):]
+    except ValueError, e:
+        return None
+    
 """
 authSubUrl = GetAuthSubUrl();
 print '<a href="%s">Login to your Google account</a>' % authSubUrl
@@ -37,7 +48,7 @@ def getSessionToken(authsub_token):
     for i, a_calendar in enumerate(feed.entry):
         print '\t%s. %s' % (i, a_calendar.title.text,)
         
-def PrintUserCalendars(calendar_service):
+def printUserCalendars(calendar_service):
     feed = calendar_service.GetAllCalendarsFeed()
     print feed.title.text
     for i, a_calendar in enumerate(feed.entry):

@@ -3,7 +3,7 @@ from google.appengine.ext import webapp
 from gg import GGClass, GithubAPI, DoLogin
 
 
-class IndexTest(unittest.TestCase):
+class GGClassTest(unittest.TestCase):
   
     def setUp(self):
         self.api = GithubAPI()
